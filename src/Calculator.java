@@ -122,8 +122,11 @@ public class Calculator extends JFrame implements ActionListener {
                 break;
             default:
                 if(errorOccured) return;
-                if(firstNum){
+                if(firstNum && !resultField.getText().equals("-")){
                     resultField.setText("");
+                    firstNum = false;
+                }
+                else if(firstNum && resultField.getText().equals("-")){
                     firstNum = false;
                 }
                 equation += buttonText;
@@ -163,20 +166,30 @@ public class Calculator extends JFrame implements ActionListener {
     private void changeSign() {
         if (!equation.isEmpty()) {
             char lastChar = equation.charAt(equation.length() - 1);
-            if (isOperator(lastChar)) {
-                equation += "-";
-            } else {
-                String[] parts = equation.split("(?=[-+*/])");
-                String lastPart = parts[parts.length - 1];
-                if (lastPart.charAt(0) == '-') {
-                    equation = equation.substring(0, equation.length() - lastPart.length()) + lastPart.substring(1);
-                } else {
-                    equation = equation.substring(0, equation.length() - lastPart.length()) + "-" + lastPart;
+
+            if (Character.isDigit(lastChar) || lastChar == '.') {
+                int lastIndex = equation.length() - 1;
+                while (lastIndex >= 0 && (Character.isDigit(equation.charAt(lastIndex)) || equation.charAt(lastIndex) == '.')) {
+                    lastIndex--;
                 }
+
+                if (lastIndex >= 0 && isOperator(equation.charAt(lastIndex))) {
+                    equation = equation.substring(0, lastIndex + 1) + "-" + equation.substring(lastIndex + 1);
+                } else {
+                    equation = equation.substring(0, equation.length() - 1) + "-" + lastChar;
+                }
+            } else if (isOperator(lastChar)) {
+                equation += "-";
             }
+
             resultField.setText(resultField.getText().startsWith("-") ? resultField.getText().substring(1) : "-" + resultField.getText());
         }
+        else{
+            equation += "-";
+            resultField.setText("-");
+        }
     }
+
 
     private String infixToPostfix(String infix) {
         StringBuilder postfix = new StringBuilder();
