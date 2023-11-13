@@ -1,15 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class Calculator extends JFrame implements ActionListener {
 
     private JTextField resultField;
     private JTextField equationField;
-    private Map<String, JButton> buttons;
     private JPanel panel;
     private String equation = "";
     private boolean firstNum = true;
@@ -47,7 +44,6 @@ public class Calculator extends JFrame implements ActionListener {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(3, 3, 3, 3);
 
-        buttons = new HashMap<>();
         String[] buttonLabels = {
                 "C", "+/-", "%", "/",
                 "7", "8", "9", "*",
@@ -82,7 +78,6 @@ public class Calculator extends JFrame implements ActionListener {
                 }
             }
 
-            buttons.put(label, button);
             panel.add(button, gbc);
             j++;
         }
@@ -120,7 +115,7 @@ public class Calculator extends JFrame implements ActionListener {
             case "/":
                 if(!firstNum) {
                     if(errorOccured) return;
-                    equation += buttonText;;
+                    equation += buttonText;
                     equationField.setText(equation);
                     resultField.setText("");
                 }
@@ -148,7 +143,7 @@ public class Calculator extends JFrame implements ActionListener {
         if (!equation.isEmpty()) {
             try {
                 double result = evaluateExpression();
-                resultField.setText(resultField.getText() + String.valueOf(result));
+                resultField.setText(resultField.getText() + result);
             }catch(ArithmeticException e){
                 resultField.setFont(new Font("Arial", Font.PLAIN, 20));
                 resultField.setText("ERROR: Division by zero");
@@ -183,20 +178,28 @@ public class Calculator extends JFrame implements ActionListener {
         }
     }
 
-
     private String infixToPostfix(String infix) {
         StringBuilder postfix = new StringBuilder();
         Stack<Character> operatorStack = new Stack<>();
+        boolean negativeNumber = false;
 
         for (char c : infix.toCharArray()) {
             if (Character.isDigit(c) || c == '.') {
+                if (negativeNumber) {
+                    postfix.append("-");
+                    negativeNumber = false;
+                }
                 postfix.append(c);
             } else if (isOperator(c)) {
-                postfix.append(" ");
-                while (!operatorStack.isEmpty() && hasHigherPrecedence(operatorStack.peek(), c)) {
-                    postfix.append(operatorStack.pop()).append(" ");
+                if (c == '-' && (postfix.isEmpty() || !Character.isDigit(postfix.charAt(postfix.length() - 1)))) {
+                    negativeNumber = true;
+                } else {
+                    postfix.append(" ");
+                    while (!operatorStack.isEmpty() && hasHigherPrecedence(operatorStack.peek(), c)) {
+                        postfix.append(operatorStack.pop()).append(" ");
+                    }
+                    operatorStack.push(c);
                 }
-                operatorStack.push(c);
             }
         }
 
@@ -212,7 +215,7 @@ public class Calculator extends JFrame implements ActionListener {
         String[] tokens = postfix.split("\\s+");
 
         for (String token : tokens) {
-            if (token.matches("\\d+\\.?\\d*")) {
+            if (token.matches("-?\\d+\\.?\\d*")) {
                 operandStack.push(Double.parseDouble(token));
             } else if (isOperator(token.charAt(0))) {
                 double operand2 = operandStack.pop();
@@ -225,6 +228,7 @@ public class Calculator extends JFrame implements ActionListener {
 
         return operandStack.pop();
     }
+
 
     private boolean isOperator(char c) {
         return c == '+' || c == '-' || c == '*' || c == '/';
