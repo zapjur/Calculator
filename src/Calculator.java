@@ -113,7 +113,14 @@ public class Calculator extends JFrame implements ActionListener {
                     calculateResult();
                 }
                 else if(isOperator(equation.charAt(equation.length()-1))) {
-
+                    lastEqual = true;
+                    lastOperation = getLastOperation();
+                    equation += lastOperation;
+                    lastOperation = getLastOperation();
+                    resultField.setText("");
+                    calculateResult();
+                    equation = resultField.getText();
+                    equationField.setText(equation);
                 }
                 else {
                     lastEqual = true;
@@ -224,6 +231,11 @@ public class Calculator extends JFrame implements ActionListener {
             if (lastIndex >= 0 && isOperator(equation.charAt(lastIndex))) {
                 return equation.substring(lastIndex);
             }
+        }
+        else {
+            int lastIndex = equation.length() - 2;
+            if(lastIndex == 0) return equation.substring(0, equation.length()-1);
+
         }
         return "";
     }
