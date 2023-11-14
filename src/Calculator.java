@@ -9,8 +9,10 @@ public class Calculator extends JFrame implements ActionListener {
     private JTextField equationField;
     private JPanel panel;
     private String equation = "";
+    private String lastOperation = "";
     private boolean firstNum = true;
     private boolean errorOccured = false;
+    private boolean lastEqual = false;
     private static final Color bgColor = new Color(52, 52, 52);
     private static final Color fgColor = new Color(255, 255, 255);
 
@@ -94,6 +96,7 @@ public class Calculator extends JFrame implements ActionListener {
 
         switch (buttonText) {
             case "C":
+                lastEqual = false;
                 clearCalculator();
                 firstNum = true;
                 errorOccured = false;
@@ -101,11 +104,30 @@ public class Calculator extends JFrame implements ActionListener {
                 break;
             case "=":
                 if(errorOccured) return;
-                equationField.setText(equation);
-                resultField.setText("");
-                calculateResult();
+                if(firstNum) return;
+                if(lastEqual) {
+                    lastEqual = true;
+                    equation += lastOperation;
+                    equationField.setText(equation);
+                    resultField.setText("");
+                    calculateResult();
+                }
+                else if(isOperator(equation.charAt(equation.length()-1))) {
+
+                }
+                else {
+                    lastEqual = true;
+                    resultField.setText("");
+                    calculateResult();
+                    if(errorOccured) return;
+                    lastOperation = getLastOperation();
+                    equation = resultField.getText();
+                    equationField.setText(equation);
+                }
+
                 break;
             case "+/-":
+                lastEqual = false;
                 if(errorOccured) return;
                 changeSign();
                 break;
@@ -113,14 +135,15 @@ public class Calculator extends JFrame implements ActionListener {
             case "-":
             case "*":
             case "/":
-                if(!firstNum) {
-                    if(errorOccured) return;
-                    equation += buttonText;
-                    equationField.setText(equation);
-                    resultField.setText("");
-                }
+                lastEqual = false;
+                if(firstNum) return;
+                if(errorOccured) return;
+                equation += buttonText;
+                equationField.setText(equation);
+                resultField.setText("");
                 break;
             default:
+                lastEqual = false;
                 if(errorOccured) return;
                 if(firstNum && !resultField.getText().equals("-")){
                     resultField.setText("");
@@ -150,6 +173,7 @@ public class Calculator extends JFrame implements ActionListener {
             }catch(ArithmeticException e){
                 resultField.setFont(new Font("Arial", Font.PLAIN, 20));
                 resultField.setText("ERROR: Division by zero");
+                equationField.setText("");
                 errorOccured = true;
 
             } catch (Exception e) {
@@ -190,6 +214,19 @@ public class Calculator extends JFrame implements ActionListener {
         }
     }
 
+    private String getLastOperation() {
+        char lastChar = equation.charAt(equation.length() - 1);
+        if (Character.isDigit(lastChar) || lastChar == '.') {
+            int lastIndex = equation.length() - 1;
+            while (lastIndex >= 0 && (Character.isDigit(equation.charAt(lastIndex)) || equation.charAt(lastIndex) == '.')) {
+                lastIndex--;
+            }
+            if (lastIndex >= 0 && isOperator(equation.charAt(lastIndex))) {
+                return equation.substring(lastIndex);
+            }
+        }
+        return "";
+    }
 
     private String infixToPostfix(String infix) {
         StringBuilder postfix = new StringBuilder();
