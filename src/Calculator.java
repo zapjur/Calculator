@@ -12,7 +12,7 @@ public class Calculator extends JFrame implements ActionListener {
     private String lastOperation = "";
     private boolean firstNum = true;
     private boolean errorOccured = false;
-    private boolean lastEqual = false;
+    private boolean lastEqual = false, lastOperator = false;
     private static final Color bgColor = new Color(52, 52, 52);
     private static final Color fgColor = new Color(255, 255, 255);
 
@@ -97,6 +97,7 @@ public class Calculator extends JFrame implements ActionListener {
         switch (buttonText) {
             case "C":
                 lastEqual = false;
+                lastOperator = false;
                 clearCalculator();
                 firstNum = true;
                 errorOccured = false;
@@ -131,10 +132,12 @@ public class Calculator extends JFrame implements ActionListener {
                     equation = resultField.getText();
                     equationField.setText(equation);
                 }
+                lastOperator = false;
 
                 break;
             case "+/-":
                 lastEqual = false;
+                lastOperator = false;
                 if(errorOccured) return;
                 changeSign();
                 break;
@@ -142,15 +145,20 @@ public class Calculator extends JFrame implements ActionListener {
             case "-":
             case "*":
             case "/":
-                lastEqual = false;
                 if(firstNum) return;
                 if(errorOccured) return;
+                if(lastOperator){
+                    equation = equation.substring(0, equation.length()-1);
+                }
                 equation += buttonText;
                 equationField.setText(equation);
                 resultField.setText("");
+                lastEqual = false;
+                lastOperator = true;
                 break;
             default:
                 lastEqual = false;
+                lastOperator = false;
                 if(errorOccured) return;
                 if(firstNum && !resultField.getText().equals("-")){
                     resultField.setText("");
@@ -235,7 +243,15 @@ public class Calculator extends JFrame implements ActionListener {
         else {
             int lastIndex = equation.length() - 2;
             if(lastIndex == 0) return equation.substring(0, equation.length()-1);
+            while (lastIndex > 0 && (Character.isDigit(equation.charAt(lastIndex)) || equation.charAt(lastIndex) == '.')) {
+                lastIndex--;
+            }
+            if (lastIndex >= 0 && isOperator(equation.charAt(lastIndex)) || lastIndex == 0) {
+                if(isOperator(equation.charAt(lastIndex)))
+                    return equation.substring(++lastIndex, equation.length()-1);
 
+                return equation.substring(lastIndex, equation.length()-1);
+            }
         }
         return "";
     }
