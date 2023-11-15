@@ -145,21 +145,30 @@ public class Calculator extends JFrame implements ActionListener {
             case "-":
             case "*":
             case "/":
-                if(firstNum) return;
                 if(errorOccured) return;
                 if(lastOperator){
                     equation = equation.substring(0, equation.length()-1);
                 }
+                if(firstNum && (buttonText.equals("*") || buttonText.equals("/"))) return;
+                else if (firstNum){
+                    resultField.setText("0");
+                }
+                else{
+                    resultField.setText("");
+                }
                 equation += buttonText;
                 equationField.setText(equation);
-                resultField.setText("");
                 lastEqual = false;
                 lastOperator = true;
                 break;
             default:
-                lastEqual = false;
-                lastOperator = false;
+
                 if(errorOccured) return;
+                if(lastEqual){
+                    equation = "";
+                    resultField.setText("");
+                    equationField.setText(equation);
+                }
                 if(firstNum && !resultField.getText().equals("-")){
                     resultField.setText("");
                     firstNum = false;
@@ -169,6 +178,9 @@ public class Calculator extends JFrame implements ActionListener {
                 }
                 equation += buttonText;
                 resultField.setText(resultField.getText() + buttonText);
+
+                lastEqual = false;
+                lastOperator = false;
                 break;
         }
     }
